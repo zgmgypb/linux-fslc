@@ -58,6 +58,7 @@ static struct fsl_spi_match_data of_fsl_spi_grlib_config = {
 	.type = TYPE_GRLIB,
 };
 
+/* 该驱动支持的设备列表 */
 static const struct of_device_id of_fsl_spi_match[] = {
 	{
 		.compatible = "fsl,spi",
@@ -818,12 +819,15 @@ static int of_fsl_spi_free_chipselects(struct device *dev)
 	return 0;
 }
 
+/* 调用到该函数, 说明 driver 已经匹配到合适的设备
+ * ofdev: 就是对应的设备的平台总线节点
+ * */
 static int of_fsl_spi_probe(struct platform_device *ofdev)
 {
 	struct device *dev = &ofdev->dev;
 	struct device_node *np = ofdev->dev.of_node;
 	struct spi_master *master;
-	struct resource mem;
+	struct resource mem; /* 资源 */
 	int irq, type;
 	int ret = -ENOMEM;
 
@@ -838,7 +842,7 @@ static int of_fsl_spi_probe(struct platform_device *ofdev)
 			goto err;
 	}
 
-	ret = of_address_to_resource(np, 0, &mem);
+	ret = of_address_to_resource(np, 0, &mem); /* 根据 address 获取资源 */
 	if (ret)
 		goto err;
 
@@ -879,7 +883,7 @@ static int of_fsl_spi_remove(struct platform_device *ofdev)
 static struct platform_driver of_fsl_spi_driver = {
 	.driver = {
 		.name = "fsl_spi",
-		.of_match_table = of_fsl_spi_match,
+		.of_match_table = of_fsl_spi_match, /* match id table */
 	},
 	.probe		= of_fsl_spi_probe,
 	.remove		= of_fsl_spi_remove,
@@ -924,7 +928,7 @@ static struct platform_driver mpc8xxx_spi_driver = {
 	.probe = plat_mpc8xxx_spi_probe,
 	.remove = plat_mpc8xxx_spi_remove,
 	.driver = {
-		.name = "mpc8xxx_spi",
+		.name = "mpc8xxx_spi", /* 直接和设备名进行比较 */
 	},
 };
 
@@ -932,7 +936,19 @@ static bool legacy_driver_failed;
 
 static void __init legacy_driver_register(void)
 {
-	legacy_driver_failed = platform_driver_register(&mpc8xxx_spi_driver);
+    /* platform_driver_register 驱动注册, 注册过程中会通过 platform 总线找已注册的设备, 调用过程如下:
+     *
+     * platform_driver_register 
+     *   driver_register
+     *     bus_add_driver
+     *       driver_attach
+     *         __driver_attach
+     *           driver_probe_device
+     *             really_probe
+     *               drv->probe
+     *                 .probe
+     * */
+	legacy_driver_failed = platform_driver_register(&mpc8xxx_spi_driver); 
 }
 
 static void __exit legacy_driver_unregister(void)
@@ -946,19 +962,24 @@ static void __init legacy_driver_register(void) {}
 static void __exit legacy_driver_unregister(void) {}
 #endif /* CONFIG_MPC832x_RDB */
 
+/* __init 含义: 只有在初始化的时候该函数才会被调用, 初始化后, 改段会被从代码段释放 
+ * __init 包含在一个特殊的 .init 段中, 包括 .init.text, .init.data
+ * 初始化完后, 整个 .init 段都会被释放掉
+ * */
 static int __init fsl_spi_init(void)
 {
-	legacy_driver_register();
-	return platform_driver_register(&of_fsl_spi_driver);
+	legacy_driver_register(); /* legacy 在计算机领域表示传统, 遗留, 这里指以前的驱动模式 */
+	return platform_driver_register(&of_fsl_spi_driver); /* 平台注册驱动注册 */
 }
-module_init(fsl_spi_init);
+module_init(fsl_spi_init); /* insmod 切入 */
 
+/* __exit 含义: 放在 .exit.text 段 */
 static void __exit fsl_spi_exit(void)
 {
-	platform_driver_unregister(&of_fsl_spi_driver);
+	platform_driver_unregister(&of_fsl_spi_driver); /* 平台总线卸载驱动 */
 	legacy_driver_unregister();
 }
-module_exit(fsl_spi_exit);
+module_exit(fsl_spi_exit); /* rmmod 切入 */
 
 MODULE_AUTHOR("Kumar Gala");
 MODULE_DESCRIPTION("Simple Freescale SPI Driver");

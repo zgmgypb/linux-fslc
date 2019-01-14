@@ -312,6 +312,7 @@ static inline void spi_unregister_driver(struct spi_driver *sdrv)
  * an SPI slave device.  For each such message it queues, it calls the
  * message's completion function when the transaction completes.
  */
+ /* spi Ö÷¿Ø½Ó¿Ú */
 struct spi_master {
 	struct device	dev;
 

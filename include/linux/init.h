@@ -9,6 +9,9 @@
  * as `initialization' functions. The kernel can take this
  * as hint that the function is used only during the initialization
  * phase and free up used memory resources after
+ * 这些宏用于标记一些函数或者已初始化数据(不能用于未初始化数据)作为
+ * '初始化'函数. 内核根据该标志知道这个函数只在初始化的时候时候, 在
+ * 后面的操作中就会把该函数对应的段释放, 释放出有用的内存。
  *
  * Usage:
  * For functions:
@@ -22,12 +25,15 @@
  *
  * If the function has a prototype somewhere, you can also add
  * __init between closing brace of the prototype and semicolon:
+ * 如果函数有声明原型, 也可以按以下方式进行声明
  *
  * extern int initialize_foobar_device(int, int, int) __init;
  *
  * For initialized data:
  * You should insert __initdata or __initconst between the variable name
  * and equal sign followed by value, e.g.:
+ * 对于初始化数据, 使用的是 __initdata 或 __initconst，这两个标志处于
+ * 变量和 = 之间
  *
  * static int init_variable __initdata = 0;
  * static const char linux_logo[] __initconst = { 0x32, 0x36, ... };
@@ -35,6 +41,7 @@
  * Don't forget to initialize data not at file scope, i.e. within a function,
  * as gcc otherwise puts the data into the bss section and not into the init
  * section.
+ * (这段描述没看懂, 用到的地方都在函数外)
  */
 
 /* These are for everybody (although not all archs will actually

@@ -169,7 +169,7 @@
  * a special section, but I don't see any sense in this right now in
  * the kernel context
  */
-#define __cold			__attribute__((__cold__))
+#define __cold			__attribute__((__cold__)) /* __cold__ ±Ì æ unlikely */
 
 #define __UNIQUE_ID(prefix) __PASTE(__PASTE(__UNIQUE_ID_, prefix), __COUNTER__)
 
